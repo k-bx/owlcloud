@@ -1,0 +1,36 @@
+name:                owlcloud-lib
+version:             0.1.0.0
+synopsis:            Simple project template from stack
+description:         Please see README.md
+homepage:            http://github.com/k-bx/owlcloud-lib#readme
+license:             BSD3
+license-file:        LICENSE
+author:              Kostiantyn Rybnikov
+maintainer:          k-bx@k-bx.com
+copyright:           Kostiantyn Rybnikov &lt;k-bx@k-bx.com&gt;
+category:            Web
+build-type:          Simple
+cabal-version:       >=1.10
+
+library
+  hs-source-dirs:      src
+  main-is:             Main.hs
+  default-language:    Haskell2010
+  build-depends:       aeson
+                     , base >= 4.7 && < 5
+                     , containers
+                     , either
+                     , servant
+                     , servant-server
+                     , stm
+                     , text
+                     , time
+                     , transformers
+                     , uuid
+                     , wai
+                     , warp
+                     , servant-client
+  exposed-modules:     Import
+                     , OwlCloud
+                     , OwlCloud.Common
+                     , OwlCloud.Types

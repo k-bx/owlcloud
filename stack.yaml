@@ -1,0 +1,8 @@
+flags: {}
+packages:
+- './owlcloud-lib'
+- './owlcloud-front'
+- './owlcloud-users'
+- './owlcloud-albums'
+extra-deps: []
+resolver: lts-3.4
