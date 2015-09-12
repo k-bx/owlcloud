@@ -284,8 +284,8 @@ like. Let's begin with a Users microservice.
 Code resides at
 [./owlcloud-users/src/Main.hs](owlcloud-users/src/Main.hs) file.
 
-First, some machinery to combine individual handlers into `UsersAPI`
-type, and then generation of a
+Let's begin with, some machinery to combine individual handlers into
+`UsersAPI` type, and then generation of a
 [wai](http://hackage.haskell.org/package/wai) `Application` type. WAI
 is a set of contracts, which describe a "reusable haskell web
 application interface". It's similar to Python's WSGI, if you're
@@ -328,9 +328,9 @@ owlIn LoginReq{..} =
       _ -> left (ServantErr 400 "Username/password pair did not match" "" [])
 ```
 
-First, our `/api/users/owl-in` handler. We begin with something which
-amazes me about Servant already: you get your route-parameters
-as...function parameters!
+They starte with our `/api/users/owl-in` handler. We begin with
+something which amazes me about Servant already: you get your
+route-parameters as...function parameters!
 
 So, no more silly manual extraction of data from some big `Request`
 type: you get what you asked for, and you get it via function
