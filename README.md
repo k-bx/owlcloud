@@ -43,7 +43,7 @@ Architecture overview
 ```
 
 Request hits a Front-End. Front-end will act as a proxy which only
-knows prefix of ech microservice's public part of API (starts with
+knows prefix of each microservice's public part of API (starts with
 `/api/`), and proxies request to it. It won't try to do any other job.
 
 Each microservice is a REST app, which has public (`/api/*`) and
