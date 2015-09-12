@@ -18,6 +18,11 @@ I will try to explain how things look like for those who don't do
 Haskell every day (I believe most Haskellers could easily do the same
 anyway).
 
+WARNING! While being small, the service is still almost real-world,
+contains a lot of features, so it has quite a lot of boilerplate. The
+purpose is to show that it's not THAT much boilerplate as for a
+service having all these features.
+
 ![woop](http://i.imgur.com/1CnO4rN.jpg)
 
 Architecture overview
