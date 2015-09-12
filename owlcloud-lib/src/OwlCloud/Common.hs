@@ -50,16 +50,13 @@ fly apiReq =
     logAndFail e = do
         liftIO (putStrLn ("Got internal-api error: " ++ show e))
         left internalError
-    internalError = ServantErr 500 "Internal Server Error" "" []
+    internalError = ServantErr 500 "CyberInternal MicroServer MicroError" "" []
 
-checkingValidity :: Maybe SigninToken
-                 -> EitherT ServantErr IO a
-                 -> EitherT ServantErr IO a
-checkingValidity mt f =
-    maybe
-      (left (ServantErr 400 "Please, provide an authorization token" "" []))
-      (\t -> fly (apiUsersTokenValidity t) >>= handleValidity >> f)
-      mt
+checkValidity :: Maybe SigninToken
+              -> EitherT ServantErr IO ()
+checkValidity =
+    maybe (left (ServantErr 400 "Please, provide an authorization token" "" []))
+          (\t -> fly (apiUsersTokenValidity t) >>= handleValidity)
   where
     handleValidity (TokenValidity True) = return ()
     handleValidity (TokenValidity False) =

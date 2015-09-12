@@ -32,7 +32,8 @@ app mgr req respond =
 getReqParams :: Request -> [(Text, Text)]
 getReqParams req = map (fromStrictByteString *** fromStrictByteString . fromMaybe "") (queryString req)
 
-microserviceProxy :: Manager -> Request -> (Network.Wai.Response -> IO b) -> Text -> IO b
+microserviceProxy :: Manager -> Request -> (Network.Wai.Response -> IO b) -> Text
+                  -> IO b
 microserviceProxy mgr req respond basePath = do
     let opts = W.defaults & W.manager .~ Right mgr
                           & W.headers .~ requestHeaders req
@@ -41,7 +42,8 @@ microserviceProxy mgr req respond basePath = do
     r <- case requestMethod req of
            "GET" -> W.getWith opts (toString url)
            "POST" -> requestBody req >>= W.postWith opts (toString url)
-    respond (responseLBS (r ^. W.responseStatus) (r ^. W.responseHeaders) (r ^. W.responseBody))
+    respond (responseLBS (r ^. W.responseStatus) (r ^. W.responseHeaders)
+                         (r ^. W.responseBody))
 
 main :: IO ()
 main = do
