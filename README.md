@@ -191,9 +191,10 @@ First route looks like this:
 
 It corresponds (as you might have guessed) to route
 `/api/users/owl-in`. `ReqBody '[JSON] LoginReq` tells that Servant
-will take a request body, decode it as a `JSON` decoder (it can
-support multiple, if you put more in list) into `LoginReq` type, and
-pass it as a parameter to your handler, which we'll see later.
+will take a request body, requiring a `Content-Type: application/json`
+header in your request, decode it as a `JSON` decoder (it can support
+multiple, if you put more in list) into `LoginReq` type, and pass it
+as a parameter to your handler, which we'll see later.
 
 `Post '[JSON] SigninToken` tells us that we'll respond in `JSON` with
 a `SigninToken` datatype.
