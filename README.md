@@ -131,7 +131,7 @@ The code for routes resides in
 
 Servant API expects you to first describe routes "in types", and then
 connect them with your routes where you want to. So, you can
-"implement" your routes several types, just as you can write multiple
+"implement" your routes several times, just as you can write multiple
 functions of some type. This lets us describe API for each
 microservice, and then combine them in bigger API.
 
