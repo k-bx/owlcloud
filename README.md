@@ -127,7 +127,7 @@ But how does it look like, exactly? Well, it's far from looking as an
 intuitive DSL, but it's good-enough to not want to write one, imho.
 
 The code for routes resides in
-[./owncloud-lib/src/OwlCloud/Types.hs](./owncloud-lib/src/OwlCloud/Types.hs).
+[owlcloud-lib/src/OwlCloud/Types.hs](owlcloud-lib/src/OwlCloud/Types.hs).
 
 Servant API expects you to first describe routes "in types", and then
 connect them with your routes where you want to. So, you can
