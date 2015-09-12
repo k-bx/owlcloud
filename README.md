@@ -200,7 +200,7 @@ as a parameter to your handler, which we'll see later.
 `POST`-reuqest, we'll respond in `JSON` with a `SigninToken` datatype.
 
 Wow, whole bunch of information about our route, and all that encoded
-on mostly-readable type-level representation. Neat!
+in mostly-readable type-level representation. Neat!
 
 Second route:
 
