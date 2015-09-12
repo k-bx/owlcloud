@@ -284,7 +284,7 @@ like. Let's begin with a Users microservice.
 Code resides at
 [./owlcloud-users/src/Main.hs](owlcloud-users/src/Main.hs) file.
 
-Let's begin with, some machinery to combine individual handlers into
+Let's begin with some machinery to combine individual handlers into
 `UsersAPI` type, and then generation of a
 [wai](http://hackage.haskell.org/package/wai) `Application` type. WAI
 is a set of contracts, which describe a "reusable haskell web
