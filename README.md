@@ -305,12 +305,13 @@ app :: Application
 app = serve usersAPI server
 ```
 
-First, we use another operator `:<|>` from Servant, which is now a
-value-level operator. It combines individual handlers together, and
-type-system then checks that type of overall expression matches
-`UsersAPI`. Errors are somewhat big, as type-synonims are expanded
-with not too much help to us, but if you'll look careful enough --
-you'll be able to figure thing out.
+First thing to notice is that we use a new operator `:<|>` from
+Servant, which is a value-level operator (never confuse with `:<|>`,
+haha). It combines individual handlers together, and type-system then
+checks that type of overall expression matches `UsersAPI`. Errors are
+somewhat big, as type-synonims are expanded with not too much help to
+us, but if you'll look careful enough -- you'll be able to figure
+thing out.
 
 Now, to individual handlers:
 
