@@ -286,10 +286,10 @@ Code resides at
 
 First, some machinery to combine individual handlers into `UsersAPI`
 type, and then generation of a
-[wai](http://hackage.haskell.org/package/wai) `Application` type. Wai
+[wai](http://hackage.haskell.org/package/wai) `Application` type. WAI
 is a set of contracts, which describe a "reusable haskell web
 application interface". It's similar to Python's WSGI, if you're
-familiar with that. After you have a wai `Application`, you can run it
+familiar with that. After you have a WAI `Application`, you can run it
 with a haskell web-server of your choice. We'll use
 [warp](http://hackage.haskell.org/package/warp), which is as fast as
 nginx (and sometimes faster!).
