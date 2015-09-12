@@ -7,6 +7,7 @@
 module Main where
 
 import           Control.Arrow            hiding (app)
+import           Control.Exception        (catch)
 import           Control.Lens
 import           Data.Maybe               (fromMaybe)
 import           Data.Monoid
@@ -15,7 +16,7 @@ import           Data.Text                (Text)
 import qualified Data.Text                as T
 import           Network.HTTP.Client      hiding (Request, queryString,
                                            requestBody, requestHeaders)
-import           Network.HTTP.Types       (status404)
+import           Network.HTTP.Types       (status404, status500)
 import           Network.Wai
 import           Network.Wai.Handler.Warp hiding (Manager)
 import qualified Network.Wreq             as W
@@ -39,11 +40,18 @@ microserviceProxy mgr req respond basePath = do
                           & W.headers .~ requestHeaders req
                           & W.params .~ getReqParams req
         url = basePath <> T.intercalate "/" (pathInfo req)
-    r <- case requestMethod req of
-           "GET" -> W.getWith opts (toString url)
-           "POST" -> requestBody req >>= W.postWith opts (toString url)
-    respond (responseLBS (r ^. W.responseStatus) (r ^. W.responseHeaders)
-                         (r ^. W.responseBody))
+    tryProxying opts url `catch` onErr
+  where
+    tryProxying opts url = do
+      r <- case requestMethod req of
+             "GET" -> W.getWith opts (toString url)
+             "POST" -> requestBody req >>= W.postWith opts (toString url)
+      respond (responseLBS (r ^. W.responseStatus) (r ^. W.responseHeaders)
+                 (r ^. W.responseBody))
+    onErr (StatusCodeException s hdrs _) = respond (responseLBS s hdrs "")
+    onErr e = do
+      putStrLn ("Internal error: " ++ show e)
+      respond (responseLBS status500 [] "Internal server error")
 
 main :: IO ()
 main = do

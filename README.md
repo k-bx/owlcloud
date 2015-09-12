@@ -566,11 +566,18 @@ microserviceProxy mgr req respond basePath = do
                           & W.headers .~ requestHeaders req
                           & W.params .~ getReqParams req
         url = basePath <> T.intercalate "/" (pathInfo req)
-    r <- case requestMethod req of
-           "GET" -> W.getWith opts (toString url)
-           "POST" -> requestBody req >>= W.postWith opts (toString url)
-    respond (responseLBS (r ^. W.responseStatus) (r ^. W.responseHeaders)
-                         (r ^. W.responseBody))
+    tryProxying opts url `catch` onErr
+  where
+    tryProxying opts url = do
+      r <- case requestMethod req of
+             "GET" -> W.getWith opts (toString url)
+             "POST" -> requestBody req >>= W.postWith opts (toString url)
+      respond (responseLBS (r ^. W.responseStatus) (r ^. W.responseHeaders)
+                 (r ^. W.responseBody))
+    onErr (StatusCodeException s hdrs _) = respond (responseLBS s hdrs "")
+    onErr e = do
+      putStrLn ("Internal error: " ++ show e)
+      respond (responseLBS status500 [] "Internal server error")
 ```
 
 We just re-build a request from request we received ourselves, and
@@ -591,6 +598,38 @@ not re-connect to microservice on each request) for us, and just run
 the web-server.
 
 That's it. That was easy, wasn't it?
+
+Testing
+-------
+
+Let us look how it works.
+
+```
+➜  ~  curl -i -XGET -H "Content-Type: application/json" -H "Authorization: badtoken" localhost:8083/api/albooms/
+HTTP/1.1 400 Your authorization token is invalid
+Transfer-Encoding: chunked
+Date: Sat, 12 Sep 2015 09:07:19 GMT
+Server: Warp/3.1.3
+
+➜  ~  curl -i -XPOST -H "Content-Type: application/json" --data '{"whoo": "great horned owl", "passwoord": "tiger"}' localhost:8081/api/users/owl-in
+HTTP/1.1 201 Created
+Transfer-Encoding: chunked
+Transfer-Encoding: chunked
+Date: Sat, 12 Sep 2015 09:07:36 GMT
+Server: Warp/3.1.3
+Content-Type: application/json
+
+"88255ebf-2dca-4638-b037-639fb762f6e0"
+
+➜  ~  curl -i -XGET -H "Content-Type: application/json" -H "Authorization: 88255ebf-2dca-4638-b037-639fb762f6e0" localhost:8083/api/albooms/
+HTTP/1.1 200 OK
+Transfer-Encoding: chunked
+Date: Sat, 12 Sep 2015 09:07:48 GMT
+Server: Warp/3.1.3
+Content-Type: application/json
+
+[[{"image":"http://i.imgur.com/PuhhmQi.jpg","description":"Scating"},{"image":"http://i.imgur.com/v5kqUIM.jpg","description":"Taking shower"}],[{"image":"http://i.imgur.com/3hRAGWJ.png","description":"About to fly"},{"image":"http://i.imgur.com/ArZrhR6.jpg","description":"Selfie"}]]
+```
 
 Conclusion
 ----------
