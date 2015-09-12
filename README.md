@@ -196,8 +196,8 @@ header in your request, decode it as a `JSON` decoder (it can support
 multiple, if you put more in list) into `LoginReq` type, and pass it
 as a parameter to your handler, which we'll see later.
 
-`Post '[JSON] SigninToken` tells us that we'll respond in `JSON` with
-a `SigninToken` datatype.
+`Post '[JSON] SigninToken` tells us that we'll respond to
+`POST`-reuqest, we'll respond in `JSON` with a `SigninToken` datatype.
 
 Wow, whole bunch of information about our route, and all that encoded
 on mostly-readable type-level representation. Neat!
