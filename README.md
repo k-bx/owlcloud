@@ -329,7 +329,7 @@ owlIn LoginReq{..} =
       _ -> left (ServantErr 400 "Username/password pair did not match" "" [])
 ```
 
-They starte with our `/api/users/owl-in` handler. We begin with
+They start with our `/api/users/owl-in` handler. We begin with
 something which amazes me about Servant already: you get your
 route-parameters as...function parameters!
 
@@ -359,7 +359,7 @@ sense, and it's dangerous (which could be relized by scary names).
 
 If you enter wrong credentials, we will respond with a `400`-code
 error, and a help-message describing the reason. You can add some
-response body, and additional headers if you want to, but we don't.
+response body, and additional headers if you want to, but I don't.
 
 Error is returned in this interesting way:
 
@@ -377,7 +377,8 @@ handlers. It's a small
 stack on top of IO, which allows explicit short-circuiting via `ServantErr` type, denoting failure.
 
 In future versions, `EitherT` will be replaced with a more modern
-[`ExceptT`](hackage.haskell.org/package/transformers/docs/Control-Monad-Trans-Except.html#t:ExceptT) type, which better denotes short-circuiting by its name.
+[`ExceptT`](hackage.haskell.org/package/transformers/docs/Control-Monad-Trans-Except.html#t:ExceptT)
+type, which better denotes short-circuiting by its name.
 
 Our `owl-out` handler just removes your token from our imaginary database:
 
@@ -480,9 +481,9 @@ apiAlbumsList =
 ```
 
 The scary `Proxy::Proxy UsersAPI` part is just to move things from
-type-level to value-level world. This is usually used when you can
-extract all needed information from just a type, but you need to do
-some actions with it in a value-level world.
+type-level to value-level world. This is usually done when you're
+already able to extract all needed information from just a type, but
+you need to do some actions with it at the value-level world.
 
 So, we deconstructed some special-built structure (via `client`
 function) into individual routines, which are able to request other
@@ -501,8 +502,8 @@ type we've seen before, used to short-circuit from handler. Rather,
 it's a REST-client-response error, which might happen if, say, your
 microservice is down or responded with an error.
 
-So we need a special `fly` function, which will convert response of
-one possible error (microservice-request error) into another, one
+So we implement a special `fly` function, which will convert response
+of one possible error (microservice-request error) into another, one
 which we send to our users, plus some logging.
 
 ```haskell
@@ -533,9 +534,9 @@ Now, the last bit is to write a front-end. Code is located at
 
 I admit, I didn't implement a bullet-proof fully-functional proxy
 which handles everything in a streaming fashion (sombody, please do
-so, would be useful, and shouldn't take too much code), it's just not
-what I intend to do in this tutorial, but this one shouldn't be bad in
-terms of performance.
+so, would be a useful tutorial, and shouldn't take too much code),
+it's just not what I intend to do in this tutorial, but this one
+shouldn't be bad in terms of performance.
 
 We define our app as:
 
@@ -574,7 +575,7 @@ microserviceProxy mgr req respond basePath = do
 
 We just re-build a request from request we received ourselves, and
 then respond with a response we've received. We implement `GET` and
-`POST` protocols only, but you've got the idea for others.
+`POST` methods only, but you've got the idea for others.
 
 Last bit -- running our front-end:
 
@@ -600,7 +601,7 @@ future team mates happy.
 
 I hope you enjoyed it.
 
-Please, send your PRs improving both code and tutorial, but don't add
-too much functionality here, since it's just a tutorial.
+Please, send your PRs improving both code and tutorial if you feel
+like doing that.
 
 ![LLAP](http://i.imgur.com/OBxk06B.jpg)
