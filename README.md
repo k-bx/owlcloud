@@ -108,6 +108,8 @@ installed, you can just run:
 par "stack exec owlcloud-front" "stack exec owlcloud-users" "stack exec owlcloud-albums"
 ```
 
+If stack doesn't work for you, you can try [cabal-only-instructions](https://www.reddit.com/r/haskell/comments/3knak5/typesafe_microservices_in_haskell_with_servant/cv0b7sj).
+
 Code overview: projects layout
 ------------------------------
 
