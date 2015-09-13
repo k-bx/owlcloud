@@ -74,26 +74,16 @@ Albums microservice will look quite simple:
   Should accept `sortby` query parameter, which is either `whoolest`
   (owl for "coolest"), or `date`.
 
-Installation
-------------
+Installation and Running
+------------------------
 
 If you're curious to play a bit with this repo's code, here are the
 instructions.
 
-This project uses
-[haskell stack tool](https://github.com/commercialhaskell/stack). Go
-and see installation instructions for your OS.
+1. Install [haskell stack tool](https://github.com/commercialhaskell/stack).
+2. Run `stack build` inside project root (right next to this README)
 
-When done, clone the project, cd inside, and do:
-
-```
-stack build
-```
-
-Running
--------
-
-Open 3 terminals and run these commands in them:
+To run, open 3 terminals and run these commands in them:
 
 ```
 stack exec owlcloud-front
@@ -108,7 +98,7 @@ installed, you can just run:
 par "stack exec owlcloud-front" "stack exec owlcloud-users" "stack exec owlcloud-albums"
 ```
 
-If stack doesn't work for you, you can try [cabal-only-instructions](https://www.reddit.com/r/haskell/comments/3knak5/typesafe_microservices_in_haskell_with_servant/cv0b7sj).
+If stack doesn't work for you, you can try [cabal-only-instructions](https://gist.github.com/k-bx/ff100755eaa12f950e9a).
 
 Code overview: projects layout
 ------------------------------
