@@ -137,7 +137,7 @@ type OwlCloudAPI = UsersAPI :<|> AlbumsAPI
 ```
 
 This is a central type, which describes all our APIs. We have two
-type-synonims for each microservice, and then smash them together with
+type-synonyms for each microservice, and then smash them together with
 a type-level combinator `:<|>`. Using type-synonyms means that our
 type-errors might (and will!) become nasty, and rather suitable for
 experienced haskeller's brain, but nothing very special to Servant is
@@ -206,14 +206,14 @@ Second route:
 ```
 
 Everything should be clear except that `Authorized` function-like
-thing. What's that? It's a type-synonim I defined at the bottom of the
+thing. What's that? It's a type-synonym I defined at the bottom of the
 same file:
 
 ```haskell
 type Authorized t = Header "Authorization" SigninToken :> t
 ```
 
-So, if you replace a type-synonim, your route will look like:
+So, if you replace a type-synonym, your route will look like:
 
 ```haskell
   "api" :> "users" :> Header "Authorization" SigninToken :> "owl-out" :> Post '[JSON] ()
@@ -306,7 +306,7 @@ First thing to notice is that we use a new operator `:<|>` from
 Servant, which is a value-level operator (never confuse with `:<|>`,
 haha). It combines individual handlers together, and type-system then
 checks that type of overall expression matches `UsersAPI`. Errors are
-somewhat big, as type-synonims are expanded with not too much help to
+somewhat big, as type-synonyms are expanded with not too much help to
 us, but if you'll look careful enough -- you'll be able to figure
 thing out.
 
