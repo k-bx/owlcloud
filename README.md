@@ -32,11 +32,11 @@ Architecture overview
                                       +--------------------------------------+   +----------------+
                                  +--->+ Users microservice (/api/users/*)    +---> Users storage  |
                                  |    +-------------+------------------------+   +----------------+
-                                 |                  ^                                              
-+-----------+      +-------------+                  |                                              
-|  Request  +----->+ Front End  ||                  |                                              
-+-----------+      +-------------+                  |                                              
-                                 |                  |                                              
+                                 |                  ^
++-----------+      +-------------+                  |
+|  Request  +----->+ Front End  ||                  |
++-----------+      +-------------+                  |
+                                 |                  |
                                  |    +-------------+------------------------+   +----------------+
                                  +--->+ Albums microservice (/api/albooms/*) +---> Albums storage |
                                       +--------------------------------------+   +----------------+
@@ -352,7 +352,7 @@ db = unsafePerformIO (unsafeInterleaveIO (newTVarIO (State Set.empty initialAlbu
 ```
 
 Yes, we use a global variable in Haskell, and sometimes it makes
-sense, and it's dangerous (which could be relized by scary names).
+sense, and it's dangerous (as indicated by the scary names).
 
 If you enter wrong credentials, we will respond with a `400`-code
 error, and a help-message describing the reason. You can add some
@@ -418,7 +418,7 @@ main = run 8082 app
 
 We use `run` from Warp web-server mentioned before.
 
-Now, Albums microservice shouldn't be much harder to understand. Just
+The Albums microservice shouldn't be much harder to understand. Just
 one end-point, no need for glueing with `:<|>` operator:
 
 ```haskell
@@ -441,8 +441,8 @@ Warning of unused `sortBy` variable (how many frameworks tell you your
 GET-parameters from your API description are not used?).
 
 Now, the interesting part is the `checkValidity` function. We put it
-in `Common.hs`, since it'd be reused by other microservices in
-future. It will do a request to Users microservice, check validity of
+in `Common.hs`, since it'd be reused by other microservices in the
+future. It will do a request to the Users microservice, check the validity of
 a token, and show an error if needed.
 
 ```haskell
@@ -499,9 +499,9 @@ type we've seen before, used to short-circuit from handler. Rather,
 it's a REST-client-response error, which might happen if, say, your
 microservice is down or responded with an error.
 
-So we implement a special `fly` function, which will convert response
-of one possible error (microservice-request error) into another, one
-which we send to our users, plus some logging.
+So we implement a special `fly` function, which will convert the response
+from one possible error (microservice-request error) into another: the one
+which we will send to our users, plus some logging.
 
 ```haskell
 fly :: (Show b, MonadIO m)
@@ -577,8 +577,8 @@ microserviceProxy mgr req respond basePath = do
       respond (responseLBS status500 [] "Internal server error")
 ```
 
-We just re-build a request from request we received ourselves, and
-then respond with a response we've received. We implement `GET` and
+We just re-build a request from the request we received ourselves, and
+then respond with the response we receive. We implement `GET` and
 `POST` methods only, but you've got the idea for others.
 
 Last bit -- running our front-end:
