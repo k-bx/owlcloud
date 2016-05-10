@@ -161,7 +161,7 @@ type UsersAPI =
   "private-api" :> "users" :> "token-validity" :> Capture "token" SigninToken :> Get '[JSON] TokenValidity
 
 newtype SigninToken = SigninToken Text
-    deriving (ToJSON, FromJSON, FromText, ToText, Ord, Eq)
+    deriving (ToJSON, FromJSON, FromHttpApiData, ToHttpApiData, Ord, Eq)
 
 data LoginReq = LoginReq
     { whoo      :: Text
