@@ -2,15 +2,17 @@
 
 module OwlCloud.Common where
 
-import           Control.Monad    (liftM)
+import           Control.Monad              (liftM)
 import           Data.Proxy
-import           Data.Set         (Set)
-import qualified Data.Set         as Set
+import           Data.Set                   (Set)
+import qualified Data.Set                   as Set
 import           Import
+import           Network.HTTP.Client        (Manager)
 import           OwlCloud.Types
 import           Servant
 import           Servant.Client
-import           System.IO.Unsafe (unsafeInterleaveIO, unsafePerformIO)
+import           System.IO.Unsafe           (unsafeInterleaveIO,
+                                             unsafePerformIO)
 
 -- | Database
 
@@ -32,32 +34,36 @@ db = unsafePerformIO (unsafeInterleaveIO (newTVarIO (State Set.empty initialAlbu
 -- Users API
 
 apiUsersOwlIn :<|> apiUsersOwlOut :<|> apiUsersTokenValidity =
-    client (Proxy::Proxy UsersAPI) (BaseUrl Http "localhost" 8082)
+    client (Proxy::Proxy UsersAPI)
+usersBaseUrl :: BaseUrl
+usersBaseUrl = BaseUrl Http "localhost" 8082 ""
 
 -- Albums API
 
 apiAlbumsList =
-    client (Proxy::Proxy AlbumsAPI) (BaseUrl Http "localhost" 8083)
+    client (Proxy::Proxy AlbumsAPI)
+albumsBaseUrl = BaseUrl Http "localhost" 8083 ""
 
 -- | Utils
 
 fly :: (Show b, MonadIO m)
-    => EitherT ServantError m b
-    -> EitherT ServantErr m b
+    => ExceptT ServantError m b
+    -> ExceptT ServantErr m b
 fly apiReq =
-    either logAndFail return =<< EitherT (liftM Right (runEitherT apiReq))
+    either logAndFail return =<< ExceptT (liftM Right (runExceptT apiReq))
   where
     logAndFail e = do
         liftIO (putStrLn ("Got internal-api error: " ++ show e))
-        left internalError
+        throwE internalError
     internalError = ServantErr 500 "CyberInternal MicroServer MicroError" "" []
 
-checkValidity :: Maybe SigninToken
-              -> EitherT ServantErr IO ()
-checkValidity =
-    maybe (left (ServantErr 400 "Please, provide an authorization token" "" []))
-          (\t -> fly (apiUsersTokenValidity t) >>= handleValidity)
+checkValidity :: Manager
+              -> Maybe SigninToken
+              -> ExceptT ServantErr IO ()
+checkValidity mgr =
+    maybe (throwE (ServantErr 400 "Please, provide an authorization token" "" []))
+          (\t -> fly (apiUsersTokenValidity t mgr usersBaseUrl) >>= handleValidity)
   where
     handleValidity (TokenValidity True) = return ()
     handleValidity (TokenValidity False) =
-        left (ServantErr 400 "Your authorization token is invalid" "" [])
+        throwE (ServantErr 400 "Your authorization token is invalid" "" [])

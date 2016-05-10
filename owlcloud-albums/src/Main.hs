@@ -3,25 +3,29 @@
 module Main where
 
 import           Import
+import           Network.HTTP.Client      (Manager, defaultManagerSettings,
+                                           newManager)
 import           Network.Wai
 import           Network.Wai.Handler.Warp
 import           OwlCloud
 import           Servant
 
-server :: Server AlbumsAPI
+server :: Manager -> Server AlbumsAPI
 server = albums
 
 albumsAPI :: Proxy AlbumsAPI
 albumsAPI = Proxy
 
-app :: Application
-app = serve albumsAPI server
+app :: Manager -> Application
+app mgr = serve albumsAPI (server mgr)
 
-albums :: Maybe SigninToken -> Maybe SortBy -> EitherT ServantErr IO [Album]
-albums mt sortBy = do
-    checkValidity mt
+albums :: Manager -> Maybe SigninToken -> Maybe SortBy -> ExceptT ServantErr IO [Album]
+albums mgr mt sortBy = do
+    checkValidity mgr mt
     state <- liftIO $ atomically $ readTVar db
     return (albumsList state)
 
 main :: IO ()
-main = run 8083 app
+main = do
+    mgr <- newManager defaultManagerSettings
+    run 8083 (app mgr)

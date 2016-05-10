@@ -4,5 +4,8 @@ packages:
 - './owlcloud-front'
 - './owlcloud-users'
 - './owlcloud-albums'
-extra-deps: []
-resolver: lts-3.4
+extra-deps:
+- servant-0.7
+- servant-server-0.7
+- servant-client-0.7
+resolver: nightly-2016-05-08

@@ -14,13 +14,14 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  main-is:             Main.hs
   default-language:    Haskell2010
   build-depends:       aeson
                      , base >= 4.7 && < 5
                      , containers
                      , either
+                     , http-client
                      , servant
+                     , servant-client
                      , servant-server
                      , stm
                      , text
@@ -29,7 +30,6 @@ library
                      , uuid
                      , wai
                      , warp
-                     , servant-client
   exposed-modules:     Import
                      , OwlCloud
                      , OwlCloud.Common

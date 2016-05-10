@@ -7,8 +7,7 @@
 module OwlCloud.Types where
 
 import           Data.Aeson
-import           Data.Text    (Text)
-import           GHC.Generics
+import           Import
 import           Servant.API
 
 type OwlCloudAPI = UsersAPI :<|> AlbumsAPI
@@ -23,7 +22,7 @@ type UsersAPI =
   "private-api" :> "users" :> "token-validity" :> Capture "token" SigninToken :> Get '[JSON] TokenValidity
 
 newtype SigninToken = SigninToken Text
-    deriving (ToJSON, FromJSON, FromText, ToText, Ord, Eq)
+    deriving (ToJSON, FromJSON, FromHttpApiData, ToHttpApiData, Ord, Eq)
 
 data LoginReq = LoginReq
     { whoo      :: Text
@@ -60,13 +59,13 @@ instance FromJSON Photo
 instance ToJSON Photo
 instance FromJSON Album
 instance ToJSON Album
-instance ToText SortBy where
-    toText SortByWhoolest = "whoolest"
-    toText SortByDate = "date"
-instance FromText SortBy where
-    fromText "whoolest" = Just SortByWhoolest
-    fromText "date" = Just SortByDate
-    fromText _ = Nothing
+instance FromHttpApiData SortBy where
+    parseQueryParam "whoolest" = Right SortByWhoolest
+    parseQueryParam "date" = Right SortByDate
+    parseQueryParam x = Left ("Unknown sortby value:" <> x)
+instance ToHttpApiData SortBy where
+    toQueryParam SortByWhoolest = "whoolest"
+    toQueryParam SortByDate = "date"
 
 -- * Common prefixes and headers
 

@@ -1,6 +1,9 @@
 Type-Safe Microservices in Haskell with Servant
 ===============================================
 
+10.05.2016 NOTE! The post was updated with the latest servant-0.7
+code, but some bugs might be still left. PRs are welcome!
+
 Microservices were becoming a hot thing few years ago and it seems
 [they are still on the rise](http://philcalcado.com/2015/09/08/how_we_ended_up_with_microservices.html).
 
@@ -256,21 +259,22 @@ instance FromJSON Photo
 instance ToJSON Photo
 instance FromJSON Album
 instance ToJSON Album
-instance ToText SortBy where
-    toText SortByWhoolest = "whoolest"
-    toText SortByDate = "date"
-instance FromText SortBy where
-    fromText "whoolest" = Just SortByWhoolest
-    fromText "date" = Just SortByDate
-    fromText _ = Nothing
+instance FromHttpApiData SortBy where
+    parseQueryParam "whoolest" = Right SortByWhoolest
+    parseQueryParam "date" = Right SortByDate
+    parseQueryParam x = Left ("Unknown sortby value:" <> x)
+instance ToHttpApiData SortBy where
+    toQueryParam SortByWhoolest = "whoolest"
+    toQueryParam SortByDate = "date"
 
 ```
 
 We capture a `sortby` param, which you will pass as `?sortby=date` at
 the end of your url.
 
-Here you can also see manual implementation of `FromText` type-class:
-it's used to encode/decode regular text value into your datatype.
+Here you can also see manual implementation of `FromHttpApiData`
+type-class: it's used to encode/decode url piece value into your
+datatype.
 
 Handlers
 --------
@@ -313,7 +317,7 @@ thing out.
 Now, to individual handlers:
 
 ```haskell
-owlIn :: LoginReq -> EitherT ServantErr IO SigninToken
+owlIn :: LoginReq -> ExceptT ServantErr IO SigninToken
 owlIn LoginReq{..} =
     case (whoo, passwoord) of
       ("great horned owl", "tiger") -> do
@@ -323,7 +327,7 @@ owlIn LoginReq{..} =
               modifyTVar db $ \s ->
                 s { validTokens = Set.insert token (validTokens s) }
           return token
-      _ -> left (ServantErr 400 "Username/password pair did not match" "" [])
+      _ -> throwE (ServantErr 400 "Username/password pair did not match" "" [])
 ```
 
 They start with our `/api/users/owl-in` handler. We begin with
@@ -361,26 +365,23 @@ response body, and additional headers if you want to, but I don't.
 Error is returned in this interesting way:
 
 ```haskell
-left (ServantErr 400 "Username/password pair did not match" "" [])
+throwE (ServantErr 400 "Username/password pair did not match" "" [])
 ```
 
 This
-[left](hackage.haskell.org/package/either/docs/Control-Monad-Trans-Either.html#v:left)
-combinator from `either` package, is something which converts some
-error-type `e` into a `EitherT e m a` type. The reason we're using it
-is because Servant uses type `EitherT ServantErr IO a` for our
-handlers. It's a small
+[throwE](http://hackage.haskell.org/package/transformers/docs/Control-Monad-Trans-Except.html#v:throwE)
+combinator from `transformers` package, is something which converts
+some error-type `e` into a `ExceptT e m a` type. The reason we're
+using it is because Servant uses type `ExceptT ServantErr IO a` for
+our handlers. It's a small
 [Monad Transformer](https://github.com/kqr/gists/blob/master/articles/gentle-introduction-monad-transformers.md)
-stack on top of IO, which allows explicit short-circuiting via `ServantErr` type, denoting failure.
-
-In future versions, `EitherT` will be replaced with a more modern
-[`ExceptT`](hackage.haskell.org/package/transformers/docs/Control-Monad-Trans-Except.html#t:ExceptT)
-type, which better denotes short-circuiting by its name.
+stack on top of IO, which allows explicit short-circuiting via
+`ServantErr` type, denoting failure.
 
 Our `owl-out` handler just removes your token from our imaginary database:
 
 ```haskell
-owlOut :: Maybe SigninToken -> EitherT ServantErr IO ()
+owlOut :: Maybe SigninToken -> ExceptT ServantErr IO ()
 owlOut mt = do
     checkAuth mt
     maybe (return ()) out mt
@@ -388,7 +389,7 @@ owlOut mt = do
     out token = liftIO $ atomically $ modifyTVar db $ \s ->
                   s { validTokens = Set.delete token (validTokens s) }
 
-checkAuth :: Maybe SigninToken -> EitherT ServantErr IO ()
+checkAuth :: Maybe SigninToken -> ExceptT ServantErr IO ()
 checkAuth = maybe unauthorized runCheck
   where
     runCheck (SigninToken token) = do
@@ -396,13 +397,13 @@ checkAuth = maybe unauthorized runCheck
         let isMember = Set.member (SigninToken token) (validTokens state)
         unless isMember unauthorized
     unauthorized =
-        left (ServantErr 401 "You are not authenticated. Please sign-in" "" [])
+        throwE (ServantErr 401 "You are not authenticated. Please sign-in" "" [])
 ```
 
 Last handler is an inner API to check token validity:
 
 ```haskell
-tokenValidity :: SigninToken -> EitherT ServantErr IO TokenValidity
+tokenValidity :: SigninToken -> ExceptT ServantErr IO TokenValidity
 tokenValidity token = do
     state <- liftIO $ atomically $ readTVar db
     return (TokenValidity (Set.member token (validTokens state)))
@@ -422,16 +423,20 @@ The Albums microservice shouldn't be much harder to understand. Just
 one end-point, no need for glueing with `:<|>` operator:
 
 ```haskell
-server :: Server AlbumsAPI
+server :: Manager -> Server AlbumsAPI
 server = albums
 ```
+
+Also notice that we'll need to pass a `Manager` value in order to have
+connection-pooling and caching when we speak to other
+microservices. It's created in main and just passed in parameters.
 
 Handler:
 
 ```haskell
-albums :: Maybe SigninToken -> Maybe SortBy -> EitherT ServantErr IO [Album]
-albums mt sortBy = do
-    checkValidity mt
+albums :: Manager -> Maybe SigninToken -> Maybe SortBy -> ExceptT ServantErr IO [Album]
+albums mgr mt sortBy = do
+    checkValidity mgr mt
     state <- liftIO $ atomically $ readTVar db
     return (albumsList state)
 ```
@@ -446,15 +451,16 @@ future. It will do a request to the Users microservice, check the validity of
 a token, and show an error if needed.
 
 ```haskell
-checkValidity :: Maybe SigninToken
-              -> EitherT ServantErr IO ()
-checkValidity =
-    maybe (left (ServantErr 400 "Please, provide an authorization token" "" []))
-          (\t -> fly (apiUsersTokenValidity t) >>= handleValidity)
+checkValidity :: Manager
+              -> Maybe SigninToken
+              -> ExceptT ServantErr IO ()
+checkValidity mgr =
+    maybe (throwE (ServantErr 400 "Please, provide an authorization token" "" []))
+          (\t -> fly (apiUsersTokenValidity t mgr usersBaseUrl) >>= handleValidity)
   where
     handleValidity (TokenValidity True) = return ()
     handleValidity (TokenValidity False) =
-        left (ServantErr 400 "Your authorization token is invalid" "" [])
+        throwE (ServantErr 400 "Your authorization token is invalid" "" [])
 ```
 
 You already understand all the `left ...` parts which just return
@@ -471,10 +477,10 @@ definition into individual request-routes (also in [Common.hs](./owlcloud-lib/sr
 
 ```haskell
 apiUsersOwlIn :<|> apiUsersOwlOut :<|> apiUsersTokenValidity =
-    client (Proxy::Proxy UsersAPI) (BaseUrl Http "localhost" 8082)
+    client (Proxy::Proxy UsersAPI)
 
 apiAlbumsList =
-    client (Proxy::Proxy AlbumsAPI) (BaseUrl Http "localhost" 8083)
+    client (Proxy::Proxy AlbumsAPI)
 ```
 
 The scary `Proxy::Proxy UsersAPI` part is just to move things from
@@ -487,7 +493,7 @@ function) into individual routines, which are able to request other
 microservices.
 
 Their types take usual route arguments, and are returning something of
-type `EitherT ServantError m a`. So, these values are not some
+type `ExceptT ServantError m a`. So, these values are not some
 descriptions, but rather actions themselves, and they do the hard job
 of requesting microservices for you. Cool!
 
@@ -505,19 +511,19 @@ which we will send to our users, plus some logging.
 
 ```haskell
 fly :: (Show b, MonadIO m)
-    => EitherT ServantError m b
-    -> EitherT ServantErr m b
+    => ExceptT ServantError m b
+    -> ExceptT ServantErr m b
 fly apiReq =
-    either logAndFail return =<< EitherT (liftM Right (runEitherT apiReq))
+    either logAndFail return =<< ExceptT (liftM Right (runExceptT apiReq))
   where
     logAndFail e = do
         liftIO (putStrLn ("Got internal-api error: " ++ show e))
-        left internalError
+        throwE internalError
     internalError = ServantErr 500 "CyberInternal MicroServer MicroError" "" []
 ```
 
 I have to admit, it's rather spooky. That's because of a machinery to
-convert a `EitherT e1 m a` into `EitherT e2 m b`. Maybe there's a
+convert a `ExceptT e1 m a` into `ExceptT e2 m b`. Maybe there's a
 better way, send your PRs!
 
 There you go, now you know how that type-safe microservice-requesting

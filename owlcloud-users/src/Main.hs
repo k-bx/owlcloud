@@ -21,7 +21,7 @@ usersAPI = Proxy
 app :: Application
 app = serve usersAPI server
 
-owlIn :: LoginReq -> EitherT ServantErr IO SigninToken
+owlIn :: LoginReq -> ExceptT ServantErr IO SigninToken
 owlIn LoginReq{..} =
     case (whoo, passwoord) of
       ("great horned owl", "tiger") -> do
@@ -31,9 +31,9 @@ owlIn LoginReq{..} =
               modifyTVar db $ \s ->
                 s { validTokens = Set.insert token (validTokens s) }
           return token
-      _ -> left (ServantErr 400 "Username/password pair did not match" "" [])
+      _ -> throwE (ServantErr 400 "Username/password pair did not match" "" [])
 
-owlOut :: Maybe SigninToken -> EitherT ServantErr IO ()
+owlOut :: Maybe SigninToken -> ExceptT ServantErr IO ()
 owlOut mt = do
     checkAuth mt
     maybe (return ()) out mt
@@ -41,14 +41,14 @@ owlOut mt = do
     out token = liftIO $ atomically $ modifyTVar db $ \s ->
                   s { validTokens = Set.delete token (validTokens s) }
 
-tokenValidity :: SigninToken -> EitherT ServantErr IO TokenValidity
+tokenValidity :: SigninToken -> ExceptT ServantErr IO TokenValidity
 tokenValidity token = do
     state <- liftIO $ atomically $ readTVar db
     return (TokenValidity (Set.member token (validTokens state)))
 
 -- Business-logic and utils
 
-checkAuth :: Maybe SigninToken -> EitherT ServantErr IO ()
+checkAuth :: Maybe SigninToken -> ExceptT ServantErr IO ()
 checkAuth = maybe unauthorized runCheck
   where
     runCheck (SigninToken token) = do
@@ -56,7 +56,7 @@ checkAuth = maybe unauthorized runCheck
         let isMember = Set.member (SigninToken token) (validTokens state)
         unless isMember unauthorized
     unauthorized =
-        left (ServantErr 401 "You are not authenticated. Please sign-in" "" [])
+        throwE (ServantErr 401 "You are not authenticated. Please sign-in" "" [])
 
 main :: IO ()
 main = run 8082 app
