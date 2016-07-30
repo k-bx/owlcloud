@@ -513,18 +513,15 @@ which we will send to our users, plus some logging.
 fly :: (Show b, MonadIO m)
     => ExceptT ServantError m b
     -> ExceptT ServantErr m b
-fly apiReq =
-    either logAndFail return =<< ExceptT (liftM Right (runExceptT apiReq))
+fly apiReq = do
+  res <- lift (runExceptT apiReq)
+  either logAndFail return res
   where
     logAndFail e = do
         liftIO (putStrLn ("Got internal-api error: " ++ show e))
         throwE internalError
     internalError = ServantErr 500 "CyberInternal MicroServer MicroError" "" []
 ```
-
-I have to admit, it's rather spooky. That's because of a machinery to
-convert a `ExceptT e1 m a` into `ExceptT e2 m b`. Maybe there's a
-better way, send your PRs!
 
 There you go, now you know how that type-safe microservice-requesting
 machinery works. Wasn't that hard, wasn't it!
