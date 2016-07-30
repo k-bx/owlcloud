@@ -2,7 +2,7 @@
 
 module OwlCloud.Common where
 
-import           Control.Monad              (liftM)
+import           Control.Monad.Trans.Class  (lift)
 import           Data.Proxy
 import           Data.Set                   (Set)
 import qualified Data.Set                   as Set
@@ -49,8 +49,9 @@ albumsBaseUrl = BaseUrl Http "localhost" 8083 ""
 fly :: (Show b, MonadIO m)
     => ExceptT ServantError m b
     -> ExceptT ServantErr m b
-fly apiReq =
-    either logAndFail return =<< ExceptT (liftM Right (runExceptT apiReq))
+fly apiReq = do
+  res <- lift (runExceptT apiReq)
+  either logAndFail return res
   where
     logAndFail e = do
         liftIO (putStrLn ("Got internal-api error: " ++ show e))
