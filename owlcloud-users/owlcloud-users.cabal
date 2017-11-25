@@ -19,7 +19,7 @@ executable owlcloud-users
   build-depends:       base >= 4.7 && < 5
                      , containers
                      , either
-                     , either
+                     , exceptions
                      , http-types
                      , owlcloud-lib
                      , servant

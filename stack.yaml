@@ -4,4 +4,4 @@ packages:
 - './owlcloud-front'
 - './owlcloud-users'
 - './owlcloud-albums'
-resolver: nightly-2016-07-29
+resolver: nightly-2017-11-25

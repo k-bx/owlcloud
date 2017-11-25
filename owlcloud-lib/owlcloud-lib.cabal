@@ -19,6 +19,7 @@ library
                      , base >= 4.7 && < 5
                      , containers
                      , either
+                     , exceptions
                      , http-client
                      , servant
                      , servant-client
