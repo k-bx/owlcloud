@@ -16,8 +16,9 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Network.HTTP.Client as HC
 import Network.HTTP.Client
-       (HttpException(HttpExceptionRequest),
-        HttpExceptionContent(StatusCodeException))
+  ( HttpException(HttpExceptionRequest)
+  , HttpExceptionContent(StatusCodeException)
+  )
 import Network.HTTP.Types (status404, status500)
 import Network.Wai
 import Network.Wai.Handler.Warp hiding (Manager)

@@ -3,8 +3,7 @@
 module Main where
 
 import Import
-import Network.HTTP.Client
-       (Manager, defaultManagerSettings, newManager)
+import Network.HTTP.Client (Manager, defaultManagerSettings, newManager)
 import Network.Wai
 import Network.Wai.Handler.Warp
 import OwlCloud
