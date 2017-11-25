@@ -19,7 +19,7 @@ albumsAPI = Proxy
 app :: Manager -> Application
 app mgr = serve albumsAPI (server mgr)
 
-albums :: Manager -> Maybe SigninToken -> Maybe SortBy -> ExceptT ServantErr IO [Album]
+albums :: Manager -> Maybe SigninToken -> Maybe SortBy -> Handler [Album]
 albums mgr mt sortBy = do
     checkValidity mgr mt
     state <- liftIO $ atomically $ readTVar db

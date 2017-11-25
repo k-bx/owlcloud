@@ -2,6 +2,7 @@
 
 module OwlCloud.Common where
 
+import Control.Monad.Catch (throwM)
 import           Control.Monad.Trans.Class  (lift)
 import           Data.Proxy
 import           Data.Set                   (Set)
@@ -33,6 +34,7 @@ db = unsafePerformIO (unsafeInterleaveIO (newTVarIO (State Set.empty initialAlbu
 
 -- Users API
 
+apiUsersTokenValidity :: SigninToken -> ClientM TokenValidity
 apiUsersOwlIn :<|> apiUsersOwlOut :<|> apiUsersTokenValidity =
     client (Proxy::Proxy UsersAPI)
 usersBaseUrl :: BaseUrl
@@ -46,25 +48,25 @@ albumsBaseUrl = BaseUrl Http "localhost" 8083 ""
 
 -- | Utils
 
-fly :: (Show b, MonadIO m)
-    => ExceptT ServantError m b
-    -> ExceptT ServantErr m b
+fly :: (Show b)
+    => IO (Either ServantError b)
+    -> Handler b
 fly apiReq = do
-  res <- lift (runExceptT apiReq)
+  res <- liftIO apiReq
   either logAndFail return res
   where
     logAndFail e = do
         liftIO (putStrLn ("Got internal-api error: " ++ show e))
-        throwE internalError
+        throwM internalError
     internalError = ServantErr 500 "CyberInternal MicroServer MicroError" "" []
 
 checkValidity :: Manager
               -> Maybe SigninToken
-              -> ExceptT ServantErr IO ()
+              -> Handler ()
 checkValidity mgr =
-    maybe (throwE (ServantErr 400 "Please, provide an authorization token" "" []))
-          (\t -> fly (apiUsersTokenValidity t mgr usersBaseUrl) >>= handleValidity)
+    maybe (throwM (ServantErr 400 "Please, provide an authorization token" "" []))
+          (\t -> fly (runClientM (apiUsersTokenValidity t) (ClientEnv mgr usersBaseUrl)) >>= handleValidity)
   where
     handleValidity (TokenValidity True) = return ()
     handleValidity (TokenValidity False) =
-        throwE (ServantErr 400 "Your authorization token is invalid" "" [])
+        throwM (ServantErr 400 "Your authorization token is invalid" "" [])
